@@ -11,6 +11,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import com.example.finalproject.databinding.ActivityMainBinding;
 
 import android.view.MenuItem;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 import org.pytorch.IValue;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String, Integer> tokenToIdMap;
     private HashMap<Integer, String> idToTokenMap;
     private Module module;
+    private InputMethodManager inputMethodManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
         BufferedReader reader = null;
         tokenToIdMap = new HashMap<String, Integer>();
         idToTokenMap = new HashMap<Integer, String>();
+
+        inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+
+        // Init label
         try {
             reader = new BufferedReader(
                     new InputStreamReader(getAssets().open("vocab.txt"), StandardCharsets.UTF_8)
@@ -81,12 +87,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         binding.btnRun.setOnClickListener(view -> {
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
             try {
-//                binding.txtResult.setText(tokenToIdMap.containsKey(edt_input.getText().toString()) ? "ada" : "nggak");
                 ArrayList<Integer> tokenized = tokenize(edt_input.getText().toString());
                 binding.txtTokenizedInput.setText(decodeInputIds(tokenized).toString());
                 binding.txtInputIds.setText(tokenized.toString());
-                binding.txtClassLabel.setText(NERPipeline(tokenized).toString());
+                binding.txtClassLabel.setText(classifyTokens(tokenized).toString());
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
@@ -117,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ArrayList<Integer> tokenize(String input) {
+        // Clean input punctuation
+        input = input.replaceAll("[^\\w\\s]", "");
+
         ArrayList<Integer> result = new ArrayList<Integer>();
 
         result.add(this.tokenToIdMap.get(this.CLS));
@@ -184,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    private ArrayList<Integer> NERPipeline(ArrayList<Integer> token_ids) {
+    private ArrayList<Integer> classifyTokens(ArrayList<Integer> token_ids) {
         LongBuffer tensor_buffer = Tensor.allocateLongBuffer(MODEL_INPUT_LENGTH);
 
         for (int i = 0; i < token_ids.size() && i < MODEL_INPUT_LENGTH; i++) {
@@ -202,7 +212,6 @@ public class MainActivity extends AppCompatActivity {
         float[] logits = tensor.getDataAsFloatArray();
 
         ArrayList<Integer> result = new ArrayList<>();
-
         for (int i = 0; i < token_ids.size() && i < MODEL_INPUT_LENGTH; i++) {
             result.add(argmax(Arrays.copyOfRange(logits, i * NUM_LABEL, (i + 1) * NUM_LABEL)));
         }
