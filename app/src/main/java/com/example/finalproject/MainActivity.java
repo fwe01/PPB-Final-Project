@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText edt_input;
     private HashMap<String, Integer> tokenToIdMap;
     private HashMap<Integer, String> idToTokenMap;
+    private HashMap<String, Integer> labelToIdMap;
+    private HashMap<Integer, String> idToLabelMap;
     private Module module;
     private InputMethodManager inputMethodManager;
 
@@ -57,35 +59,38 @@ public class MainActivity extends AppCompatActivity {
 
         edt_input = findViewById(R.id.edt_input);
 
-        BufferedReader reader = null;
-        tokenToIdMap = new HashMap<String, Integer>();
-        idToTokenMap = new HashMap<Integer, String>();
-
         inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
-        // Init label
+        initLabelMapping();
+
+        initVocabularyMapping();
+
+        loadModel();
+
+        initRunButton();
+    }
+
+    private void initLabelMapping() {
+        labelToIdMap = new HashMap<String, Integer>();
+        idToLabelMap = new HashMap<Integer, String>();
+
         try {
-            reader = new BufferedReader(
-                    new InputStreamReader(getAssets().open("vocab.txt"), StandardCharsets.UTF_8)
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(getAssets().open("label.txt"), StandardCharsets.UTF_8)
             );
             String mLine;
 
             while ((mLine = reader.readLine()) != null) {
                 String[] split = mLine.split("<>");
-                tokenToIdMap.put(split[0], Integer.parseInt(split[1]));
-                idToTokenMap.put(Integer.parseInt(split[1]), split[0]);
+                labelToIdMap.put(split[0], Integer.parseInt(split[1]));
+                idToLabelMap.put(Integer.parseInt(split[1]), split[0]);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
-        // Load in the model
-        try {
-            module = Module.load(assetFilePath("model.pt"));
-        } catch (IOException e) {
-            Log.e("MainActiv", "Unable to load model", e);
-        }
-
+    private void initRunButton() {
         binding.btnRun.setOnClickListener(view -> {
             inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
 
@@ -98,6 +103,33 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println(e.getMessage());
             }
         });
+    }
+
+    private void loadModel() {
+        try {
+            module = Module.load(assetFilePath("model.pt"));
+        } catch (IOException e) {
+            Log.e("MainActiv", "Unable to load model", e);
+        }
+    }
+
+    private void initVocabularyMapping() {
+        tokenToIdMap = new HashMap<String, Integer>();
+        idToTokenMap = new HashMap<Integer, String>();
+        try {
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(getAssets().open("vocab.txt"), StandardCharsets.UTF_8)
+            );
+            String mLine;
+
+            while ((mLine = reader.readLine()) != null) {
+                String[] split = mLine.split("<>");
+                tokenToIdMap.put(split[0], Integer.parseInt(split[1]));
+                idToTokenMap.put(Integer.parseInt(split[1]), split[0]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -194,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    private ArrayList<Integer> classifyTokens(ArrayList<Integer> token_ids) {
+    private ArrayList<String> classifyTokens(ArrayList<Integer> token_ids) {
         LongBuffer tensor_buffer = Tensor.allocateLongBuffer(MODEL_INPUT_LENGTH);
 
         for (int i = 0; i < token_ids.size() && i < MODEL_INPUT_LENGTH; i++) {
@@ -211,9 +243,9 @@ public class MainActivity extends AppCompatActivity {
         Tensor tensor = tensor_output[0].toTensor();
         float[] logits = tensor.getDataAsFloatArray();
 
-        ArrayList<Integer> result = new ArrayList<>();
+        ArrayList<String> result = new ArrayList<>();
         for (int i = 0; i < token_ids.size() && i < MODEL_INPUT_LENGTH; i++) {
-            result.add(argmax(Arrays.copyOfRange(logits, i * NUM_LABEL, (i + 1) * NUM_LABEL)));
+            result.add(idToLabelMap.get(argmax(Arrays.copyOfRange(logits, i * NUM_LABEL, (i + 1) * NUM_LABEL))));
         }
 
         return result;
