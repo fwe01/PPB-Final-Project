@@ -1,18 +1,20 @@
 package com.example.finalproject;
 
 import android.os.Bundle;
-
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.util.Log;
-
-import androidx.navigation.ui.AppBarConfiguration;
-
-import com.example.finalproject.databinding.ActivityMainBinding;
-
 import android.view.MenuItem;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.finalproject.adapter.NamedEntityAdapter;
+import com.example.finalproject.databinding.ActivityMainBinding;
+import com.example.finalproject.model.NamedEntity;
 
 import org.pytorch.IValue;
 import org.pytorch.Module;
@@ -98,29 +100,61 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 ArrayList<Integer> tokenized = tokenize(edt_input.getText().toString());
+                binding.txtInputIds.setText(tokenized.toString());
+
                 ArrayList<String> tokenized_string = decodeInputIds(tokenized);
                 binding.txtTokenizedInput.setText(tokenized_string.toString());
-                binding.txtInputIds.setText(tokenized.toString());
+
                 ArrayList<Integer> classified_id = classifyTokens(tokenized);
-                binding.txtClassId.setText(convertIdToLabel(classified_id).toString());
-                binding.txtClassLabel.setText(groupLabel(tokenized_string, classified_id).toString());
+                binding.txtClassLabel.setText(convertIdToLabel(classified_id).toString());
+
+                HashMap<String, ArrayList<NamedEntity>> grouped_label = groupLabels(tokenized_string, classified_id);
+                updateResult(grouped_label);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
         });
     }
 
+    private void updateResult(HashMap<String, ArrayList<NamedEntity>> grouped_label) {
+        if (grouped_label.containsKey("PER")) {
+            initRecyclerView(grouped_label.get("PER"), R.id.named_entity_orang_list_view);
+        }
+        if (grouped_label.containsKey("PRD")) {
+            initRecyclerView(grouped_label.get("PRD"), R.id.named_entity_produk_list_view);
+        }
+        if (grouped_label.containsKey("LOC")) {
+            initRecyclerView(grouped_label.get("LOC"), R.id.named_entity_lokasi_list_view);
+        }
+        if (grouped_label.containsKey("MON")) {
+            initRecyclerView(grouped_label.get("MON"), R.id.named_entity_uang_list_view);
+        }
+        if (grouped_label.containsKey("ORG")) {
+            initRecyclerView(grouped_label.get("ORG"), R.id.named_entity_organisasi_list_view);
+        }
+    }
+
+    private void initRecyclerView(ArrayList<NamedEntity> named_entities, int p) {
+        LinearLayoutManager linearLayoutManagerOrang = new LinearLayoutManager(getApplicationContext());
+        linearLayoutManagerOrang.setOrientation(LinearLayoutManager.HORIZONTAL);
+        RecyclerView recyclerViewOrang = findViewById(p);
+        NamedEntityAdapter namedEntityAdapter = new NamedEntityAdapter(Objects.requireNonNull(named_entities));
+        recyclerViewOrang.setItemAnimator(new DefaultItemAnimator());
+        recyclerViewOrang.setLayoutManager(linearLayoutManagerOrang);
+        recyclerViewOrang.setAdapter(namedEntityAdapter);
+    }
+
     private void loadModel() {
         try {
             module = Module.load(assetFilePath("model.pt"));
         } catch (IOException e) {
-            Log.e("MainActiv", "Unable to load model", e);
+            Log.e("MainActivity", "Unable to load model", e);
         }
     }
 
     private void initVocabularyMapping() {
-        tokenToIdMap = new HashMap<String, Integer>();
-        idToTokenMap = new HashMap<Integer, String>();
+        tokenToIdMap = new HashMap<>();
+        idToTokenMap = new HashMap<>();
         try {
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(getAssets().open("vocab.txt"), StandardCharsets.UTF_8)
@@ -153,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ArrayList<String> decodeInputIds(ArrayList<Integer> input_ids) {
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         for (Integer input_id : input_ids) {
             result.add(this.idToTokenMap.get(input_id));
         }
@@ -164,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
         // Clean input punctuation
         input = input.replaceAll("[^\\w\\s]", "");
 
-        ArrayList<Integer> result = new ArrayList<Integer>();
+        ArrayList<Integer> result = new ArrayList<>();
 
         result.add(this.tokenToIdMap.get(this.CLS));
 
@@ -238,8 +272,6 @@ public class MainActivity extends AppCompatActivity {
             tensor_buffer.put(token_ids.get(i));
         }
 
-        for (Integer token_id : token_ids) tensor_buffer.put(token_id);
-
         long[] arr = new long[]{1, MODEL_INPUT_LENGTH};
 
         Tensor tensor_input = Tensor.fromBlob(tensor_buffer, arr);
@@ -265,8 +297,8 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    private HashMap<String, ArrayList<String>> groupLabel(ArrayList<String> strings, ArrayList<Integer> ids) {
-        HashMap<String, ArrayList<String>> result = new HashMap<>();
+    private HashMap<String, ArrayList<NamedEntity>> groupLabels(ArrayList<String> strings, ArrayList<Integer> ids) {
+        HashMap<String, ArrayList<NamedEntity>> result = new HashMap<>();
 
         for (int i = 0; i < ids.size(); i++) {
             //kalau id sekarang adalah start
@@ -288,12 +320,13 @@ public class MainActivity extends AppCompatActivity {
 
                 String string = String.join(" ", current_strings).replaceAll(" ##", "")
                         .replaceAll("\\s+(?=\\p{Punct})", "");
+                NamedEntity namedEntity = new NamedEntity(current_label, string);
 
                 if (result.containsKey(current_label)) {
-                    Objects.requireNonNull(result.get(current_label)).add(string);
+                    Objects.requireNonNull(result.get(current_label)).add(namedEntity);
                 } else {
-                    ArrayList<String> new_array = new ArrayList<>();
-                    new_array.add(string);
+                    ArrayList<NamedEntity> new_array = new ArrayList<>();
+                    new_array.add(namedEntity);
                     result.put(current_label, new_array);
                 }
             }

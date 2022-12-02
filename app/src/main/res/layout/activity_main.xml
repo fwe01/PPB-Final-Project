@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -100,7 +99,7 @@
                     android:text="@string/class_label" />
 
                 <TextView
-                    android:id="@+id/txt_class_id"
+                    android:id="@+id/txt_class_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
@@ -116,16 +115,86 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="@string/classification_result" />
+                    android:layout_marginBottom="@dimen/m5"
+                    android:text="@string/orang"
+                    android:textSize="@dimen/h2" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/named_entity_orang_list_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/txt_class_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="@string/result" />
+                    android:layout_marginBottom="@dimen/m5"
+                    android:text="@string/produk"
+                    android:textSize="@dimen/h2" />
 
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/named_entity_produk_list_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/m5"
+                    android:text="@string/lokasi"
+                    android:textSize="@dimen/h2" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/named_entity_lokasi_list_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/m5"
+                    android:text="@string/uang"
+                    android:textSize="@dimen/h2" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/named_entity_uang_list_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/m5"
+                    android:text="@string/organisasi"
+                    android:textSize="@dimen/h2" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/named_entity_organisasi_list_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

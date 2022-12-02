@@ -17,4 +17,9 @@
     <string name="tokenized">Tokenized Input</string>
     <string name="class_id">Class Id</string>
     <string name="classification_result">Classification Result</string>
+    <string name="orang">Orang</string>
+    <string name="produk">Produk</string>
+    <string name="lokasi">Lokasi</string>
+    <string name="uang">Uang</string>
+    <string name="organisasi">Organisasi</string>
 </resources>
