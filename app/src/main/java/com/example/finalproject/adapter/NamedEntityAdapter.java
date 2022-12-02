@@ -16,7 +16,7 @@ import com.example.finalproject.model.NamedEntity;
 import java.util.ArrayList;
 
 public class NamedEntityAdapter extends RecyclerView.Adapter<NamedEntityAdapter.ViewHolder> {
-    private ArrayList<NamedEntity> namedEntities;
+    private final ArrayList<NamedEntity> namedEntities;
 
     public NamedEntityAdapter(ArrayList<NamedEntity> namedEntities) {
         this.namedEntities = namedEntities;
@@ -35,8 +35,8 @@ public class NamedEntityAdapter extends RecyclerView.Adapter<NamedEntityAdapter.
         NamedEntity namedEntity = namedEntities.get(position);
         holder.button.setText(namedEntity.getText());
         holder.button.setOnClickListener(view -> {
-            System.out.println("opening google for " + namedEntity.getText());
-            Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"));
+            System.out.println("opening google for " + namedEntity.getText().replaceAll("\\s+", "+"));
+            Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=" + namedEntity.getText().replaceAll("\\s+", "+")));
             view.getContext().startActivity(myIntent);
         });
     }

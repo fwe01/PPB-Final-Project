@@ -135,13 +135,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initRecyclerView(ArrayList<NamedEntity> named_entities, int p) {
-        LinearLayoutManager linearLayoutManagerOrang = new LinearLayoutManager(getApplicationContext());
-        linearLayoutManagerOrang.setOrientation(LinearLayoutManager.HORIZONTAL);
-        RecyclerView recyclerViewOrang = findViewById(p);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        RecyclerView recyclerView = findViewById(p);
         NamedEntityAdapter namedEntityAdapter = new NamedEntityAdapter(Objects.requireNonNull(named_entities));
-        recyclerViewOrang.setItemAnimator(new DefaultItemAnimator());
-        recyclerViewOrang.setLayoutManager(linearLayoutManagerOrang);
-        recyclerViewOrang.setAdapter(namedEntityAdapter);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(namedEntityAdapter);
     }
 
     private void loadModel() {
