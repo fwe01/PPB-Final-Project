@@ -15,4 +15,6 @@
     <string name="input_ids">Input Ids</string>
     <string name="class_label">Class Label</string>
     <string name="tokenized">Tokenized Input</string>
+    <string name="class_id">Class Id</string>
+    <string name="classification_result">Classification Result</string>
 </resources>

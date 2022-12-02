@@ -100,6 +100,26 @@
                     android:text="@string/class_label" />
 
                 <TextView
+                    android:id="@+id/txt_class_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/result" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/classification_result" />
+
+                <TextView
                     android:id="@+id/txt_class_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

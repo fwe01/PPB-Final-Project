@@ -30,10 +30,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MODEL_INPUT_LENGTH = 512;
-    public static final int NUM_LABEL = 39;
+    private static final int NUM_LABEL = 39;
+    public static final int BEGIN_LABEL_COUNT = 18;
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
@@ -96,9 +98,12 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 ArrayList<Integer> tokenized = tokenize(edt_input.getText().toString());
-                binding.txtTokenizedInput.setText(decodeInputIds(tokenized).toString());
+                ArrayList<String> tokenized_string = decodeInputIds(tokenized);
+                binding.txtTokenizedInput.setText(tokenized_string.toString());
                 binding.txtInputIds.setText(tokenized.toString());
-                binding.txtClassLabel.setText(classifyTokens(tokenized).toString());
+                ArrayList<Integer> classified_id = classifyTokens(tokenized);
+                binding.txtClassId.setText(convertIdToLabel(classified_id).toString());
+                binding.txtClassLabel.setText(groupLabel(tokenized_string, classified_id).toString());
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
@@ -226,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    private ArrayList<String> classifyTokens(ArrayList<Integer> token_ids) {
+    private ArrayList<Integer> classifyTokens(ArrayList<Integer> token_ids) {
         LongBuffer tensor_buffer = Tensor.allocateLongBuffer(MODEL_INPUT_LENGTH);
 
         for (int i = 0; i < token_ids.size() && i < MODEL_INPUT_LENGTH; i++) {
@@ -243,12 +248,66 @@ public class MainActivity extends AppCompatActivity {
         Tensor tensor = tensor_output[0].toTensor();
         float[] logits = tensor.getDataAsFloatArray();
 
-        ArrayList<String> result = new ArrayList<>();
+        ArrayList<Integer> result = new ArrayList<>();
         for (int i = 0; i < token_ids.size() && i < MODEL_INPUT_LENGTH; i++) {
-            result.add(idToLabelMap.get(argmax(Arrays.copyOfRange(logits, i * NUM_LABEL, (i + 1) * NUM_LABEL))));
+            result.add(argmax(Arrays.copyOfRange(logits, i * NUM_LABEL, (i + 1) * NUM_LABEL)));
         }
 
         return result;
+    }
+
+    private ArrayList<String> convertIdToLabel(ArrayList<Integer> ids) {
+        ArrayList<String> result = new ArrayList<>();
+        for (Integer id : ids) {
+            result.add(idToLabelMap.get(id));
+        }
+
+        return result;
+    }
+
+    private HashMap<String, ArrayList<String>> groupLabel(ArrayList<String> strings, ArrayList<Integer> ids) {
+        HashMap<String, ArrayList<String>> result = new HashMap<>();
+
+        for (int i = 0; i < ids.size(); i++) {
+            //kalau id sekarang adalah start
+            if (isBeginLabelId(ids.get(i))) {
+                String current_label = Objects.requireNonNull(idToLabelMap.get(ids.get(i))).substring(2);
+                ArrayList<String> current_strings = new ArrayList<>();
+                current_strings.add(strings.get(i));
+
+                while (true) {
+                    if (++i >= ids.size()) break;
+
+                    if (isFollowLabelId(ids.get(i))) {
+                        current_strings.add(strings.get(i));
+                        continue;
+                    }
+
+                    break;
+                }
+
+                String string = String.join(" ", current_strings).replaceAll(" ##", "")
+                        .replaceAll("\\s+(?=\\p{Punct})", "");
+
+                if (result.containsKey(current_label)) {
+                    Objects.requireNonNull(result.get(current_label)).add(string);
+                } else {
+                    ArrayList<String> new_array = new ArrayList<>();
+                    new_array.add(string);
+                    result.put(current_label, new_array);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private boolean isBeginLabelId(int id) {
+        return id <= BEGIN_LABEL_COUNT;
+    }
+
+    private boolean isFollowLabelId(int id) {
+        return BEGIN_LABEL_COUNT < id && id < NUM_LABEL - 1;
     }
 
     private int argmax(float[] array) {
