@@ -117,21 +117,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateResult(HashMap<String, ArrayList<NamedEntity>> grouped_label) {
-        if (grouped_label.containsKey("PER")) {
-            initRecyclerView(grouped_label.get("PER"), R.id.named_entity_orang_list_view);
-        }
-        if (grouped_label.containsKey("PRD")) {
-            initRecyclerView(grouped_label.get("PRD"), R.id.named_entity_produk_list_view);
-        }
-        if (grouped_label.containsKey("LOC")) {
-            initRecyclerView(grouped_label.get("LOC"), R.id.named_entity_lokasi_list_view);
-        }
-        if (grouped_label.containsKey("MON")) {
-            initRecyclerView(grouped_label.get("MON"), R.id.named_entity_uang_list_view);
-        }
-        if (grouped_label.containsKey("ORG")) {
-            initRecyclerView(grouped_label.get("ORG"), R.id.named_entity_organisasi_list_view);
-        }
+        ArrayList<NamedEntity> empty = new ArrayList<>();
+        initRecyclerView(grouped_label.getOrDefault("PER", empty), R.id.named_entity_orang_list_view);
+        initRecyclerView(grouped_label.getOrDefault("PRD", empty), R.id.named_entity_produk_list_view);
+        initRecyclerView(grouped_label.getOrDefault("LOC", empty), R.id.named_entity_lokasi_list_view);
+        initRecyclerView(grouped_label.getOrDefault("MON", empty), R.id.named_entity_uang_list_view);
+        initRecyclerView(grouped_label.getOrDefault("ORG", empty), R.id.named_entity_organisasi_list_view);
     }
 
     private void initRecyclerView(ArrayList<NamedEntity> named_entities, int p) {
